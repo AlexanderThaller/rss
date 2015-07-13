@@ -3,12 +3,18 @@ package rss
 import (
 	"strings"
 	"time"
+
+	"github.com/jinzhu/now"
 )
 
 func parseTime(s string) (time.Time, error) {
 	formats := []string{
 		"Mon, _2 Jan 2006 15:04:05 MST",
+		"Mon, _2 January 2006 15:04:05 MST",
+		"Mond, _2 January 2006 15:04:05 MST",
 		"Mon, _2 Jan 2006 15:04:05 -0700",
+		"Mon, _2 Jan 06 15:04:05 -0700",
+		"_2 Jan 2006 15:04:05 -0700",
 		time.ANSIC,
 		time.UnixDate,
 		time.RubyDate,
@@ -20,18 +26,25 @@ func parseTime(s string) (time.Time, error) {
 		time.RFC3339,
 		time.RFC3339Nano,
 	}
+	for _, format := range formats {
+		now.TimeFormats = append(now.TimeFormats, format)
+	}
 
 	s = strings.TrimSpace(s)
-	
-	var e error
-	var t time.Time
-	
-	for _, format := range formats {
-		t, e = time.Parse(format, s)
-		if e == nil {
-			return t, e
-		}
+
+	replaces := make(map[string]string)
+	replaces["Thur"] = "Thu"
+	replaces["Tues"] = "Tue"
+	replaces["Thus"] = "Thu"
+
+	for from, to := range replaces {
+		s = strings.Replace(s, from, to, -1)
 	}
-	
-	return time.Time{}, e
+
+	t, err := now.Parse(s)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return t, nil
 }
