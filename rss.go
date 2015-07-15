@@ -10,6 +10,8 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"github.com/juju/errgo"
 )
 
 // Parse RSS or Atom data.
@@ -100,7 +102,7 @@ func (f *Feed) Update() error {
 
 	// Check that we don't update too often.
 	if f.Refresh.After(time.Now()) {
-		return nil
+		return errgo.New("refresh after was called to soon. will not update")
 	}
 
 	if f.UpdateURL == "" {
